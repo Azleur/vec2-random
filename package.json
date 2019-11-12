@@ -1,16 +1,18 @@
 {
-    "private": true,
-    "name": "vec2-random",
+    "name": "@azleur/vec2-random",
     "version": "0.1.0",
-    "author": "Azleur",
+    "author": "azleur",
+    "license": "ISC",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Azleur/vec2-random.git"
+    },
+    "homepage": "https://github.com/Azleur/vec2-random",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "scripts": {
         "test": "jest",
-        "test:run": "jest",
-        "test:watch": "jest --watch",
-        "test:coverage": "jest --collectCoverage",
-        "build": "rm -rf dist && tsc"
+        "build": "rm -rf dist && tsc && uglifyjs dist/*.js --compress --output dist/*.js"
     },
     "devDependencies": {
         "@types/jest": "^24.0.18",
