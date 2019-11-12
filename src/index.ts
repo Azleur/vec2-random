@@ -1,6 +1,6 @@
-import { rng, GetDefaultGenerator } from 'random-util';
-import { Vec2, FromPolar } from 'vec2';
-import { Interpolate } from 'math-util';
+import { rng, GetDefaultGenerator } from '@azleur/random';
+import { Vec2, FromPolar } from '@azleur/vec2';
+import { Interpolate } from '@azleur/math-util';
 
 // TODO: TEST EVERYTHING!
 
