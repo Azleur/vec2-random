@@ -2,8 +2,6 @@ import { rng, GetDefaultGenerator } from '@azleur/random';
 import { Vec2, FromPolar } from '@azleur/vec2';
 import { Interpolate } from '@azleur/math-util';
 
-// TODO: TEST EVERYTHING!
-
 export class RngVec2Provider {
     generator: rng;
     constructor(generator?: rng) {
@@ -40,7 +38,6 @@ export class RngVec2Provider {
         return FromPolar(r, a);
     }
 
-    // TODO: TEST!
     /** Returns a uniform random Vec2 in the ring with given inner and outer radii. */
     RingUniform(innerRadius: number, outerRadius: number): Vec2 {
         const r2 = innerRadius * innerRadius;
@@ -63,7 +60,6 @@ export class RngVec2Provider {
         return FromPolar(radius, angle);
     }
 
-    // TODO: TEST!
     /** Uses the Box-Muller method to generate two independent normal samples. */
     Normal(): Vec2 {
         const u1 = this.generator();

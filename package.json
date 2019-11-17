@@ -15,7 +15,7 @@
         "build": "rm -rf dist && tsc && uglifyjs dist/*.js --compress --output dist/*.js"
     },
     "devDependencies": {
-        "@azleur/stats": "^0.1.0",
+        "@azleur/stats": "^0.2.1",
         "@types/jest": "^24.0.18",
         "jest": "^24.9.0",
         "ts-jest": "^24.1.0",

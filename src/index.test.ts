@@ -1,71 +1,86 @@
 import { RngVec2Provider } from '.';
-import { Stats, Validation, NullStats, GetIngestor, Validate } from '@azleur/stats';
+import {
+    ObserveCovariance,
+    CovarianceValidation,
+    CovarianceValidate,
+    GetCovarianceIngestor,
+    NullCovarianceStats
+} from '@azleur/stats';
 import { Vec2 } from '@azleur/vec2';
 
-const SAMPLES = 8000;
+const SAMPLES = 10000;
 
 test("Uniform() variants generate uniform values in a rectangle.", () => {
     const provider = new RngVec2Provider();
 
-    const helper = (sut: () => Vec2, xVal: Validation, yVal: Validation): void => {
-        const xIngestor = GetIngestor();
-        const yIngestor = GetIngestor();
-        let xStats: Stats = NullStats();
-        let yStats: Stats = NullStats();
-        for (let i = 0; i < SAMPLES; i++) {
-            const sample = sut();
-            xStats = xIngestor(sample.x);
-            yStats = yIngestor(sample.y);
-        }
-
-        expect(Validate(xStats, xVal)).toBe(true);
-        expect(Validate(yStats, yVal)).toBe(true);
-        // TODO: Correlation.
+    const helper = (sut: () => Vec2, validation: CovarianceValidation): void => {
+        const stats = ObserveCovariance(sut, SAMPLES);
+        expect(CovarianceValidate(stats, validation)).toBe(true);
     }
 
     helper(
         () => provider.Uniform(),
-        { tolerance: 0.1, min: 0, max: 1, mean: 0.5, variance: 1 / 12 },
-        { tolerance: 0.1, min: 0, max: 1, mean: 0.5, variance: 1 / 12 }
+        {
+            tolerance: 0.1,
+            covariance: 0,
+            x: { tolerance: 0.1, min: 0, max: 1, mean: 0.5, variance: 1 / 12 },
+            y: { tolerance: 0.1, min: 0, max: 1, mean: 0.5, variance: 1 / 12 },
+        }
     );
+
     helper(
         () => provider.Uniform(new Vec2(-1, -2), new Vec2(3, 4)),
-        { tolerance: 0.1, min: -1, max: 3, mean: 1, variance: 4 / 3 },
-        { tolerance: 0.1, min: -2, max: 4, mean: 1, variance: 3 }
+        {
+            tolerance: 0.1,
+            covariance: 0,
+            x: { min: -1, max: 3, mean: 1, variance: 4 / 3 },
+            y: { min: -2, max: 4, mean: 1, variance: 3 },
+        }
     );
+
     helper(
         () => provider.Uniform(-1, -2, 3, 4),
-        { tolerance: 0.1, min: -1, max: 3, mean: 1, variance: 4 / 3 },
-        { tolerance: 0.1, min: -2, max: 4, mean: 1, variance: 3 }
+        {
+            tolerance: 0.1,
+            covariance: 0,
+            x: { min: -1, max: 3, mean: 1, variance: 4 / 3 },
+            y: { tolerance: 0.1, min: -2, max: 4, mean: 1, variance: 3 },
+        }
     );
 });
 
 test("BallUniform(R) provides uniform values inside the radius R ball", () => {
     const provider = new RngVec2Provider();
 
-    for (let R = 0.5; R <= 2; R += 0.25) {
-        const xIngestor = GetIngestor();
-        const yIngestor = GetIngestor();
-        const radiusIngestor = GetIngestor();
-        const angleIngestor = GetIngestor();
-        let xStats: Stats = NullStats();
-        let yStats: Stats = NullStats();
-        let radiusStats: Stats = NullStats();
-        let angleStats: Stats = NullStats();
+    for (let R = 0.5; R <= 4; R += 0.25) {
+        const cartesianIngestor = GetCovarianceIngestor();
+        const radialIngestor = GetCovarianceIngestor();
+
+        let cartesianStats = NullCovarianceStats();
+        let radialStats = NullCovarianceStats();
 
         for (let i = 0; i < SAMPLES; i++) {
             const sample = provider.BallUniform(R);
-            xStats = xIngestor(sample.x);
-            yStats = yIngestor(sample.y);
-            radiusStats = radiusIngestor(sample.Mag());
-            angleStats = angleIngestor(sample.Argument());
+            cartesianStats = cartesianIngestor(sample.x, sample.y);
+            radialStats = radialIngestor(sample.Mag(), sample.Argument());
         }
 
-        // TODO: CHECK VARIANCES!
-        expect(Validate(xStats, { tolerance: 0.1, min: -R, max: +R, mean: 0 })).toBe(true);
-        expect(Validate(yStats, { tolerance: 0.1, min: -R, max: +R, mean: 0 })).toBe(true);
-        expect(Validate(radiusStats, { tolerance: 0.1, min: 0, max: R })).toBe(true);
-        expect(Validate(angleStats, { tolerance: 0.1, min: -Math.PI, max: +Math.PI, mean: 0, variance: Math.PI * Math.PI / 3 })).toBe(true);
+        const cartesianExpected = {
+            tolerance: 0.1,
+            covariance: 0,
+            x: { min: -R, max: +R, mean: 0, },
+            y: { min: -R, max: +R, mean: 0, },
+        };
+
+        const radialExpected = {
+            tolerance: 0.1,
+            covariance: 0,
+            x: { min: 0, max: R, mean: (2 * R) / 3, variance: (R * R) / 18, },
+            y: { min: -Math.PI, max: +Math.PI, mean: 0, variance: (Math.PI * Math.PI) / 3, },
+        };
+
+        expect(CovarianceValidate(cartesianStats, cartesianExpected)).toBe(true);
+        expect(CovarianceValidate(radialStats, radialExpected)).toBe(true);
     }
 });
 
@@ -75,28 +90,60 @@ test("RingUniform(r, R) provides uniform values inside the ring with inner radiu
     for (let r = 0.5; r <= 2; r += 0.25) {
         for (let d = 0.5; d <= 1; d += 0.25) {
             let R = r + d;
-            const xIngestor = GetIngestor();
-            const yIngestor = GetIngestor();
-            const radiusIngestor = GetIngestor();
-            const angleIngestor = GetIngestor();
-            let xStats: Stats = NullStats();
-            let yStats: Stats = NullStats();
-            let radiusStats: Stats = NullStats();
-            let angleStats: Stats = NullStats();
+            const cartesianIngestor = GetCovarianceIngestor();
+            const radialIngestor = GetCovarianceIngestor();
+
+            let cartesianStats = NullCovarianceStats();
+            let radialStats = NullCovarianceStats();
 
             for (let i = 0; i < SAMPLES; i++) {
                 const sample = provider.RingUniform(r, R);
-                xStats = xIngestor(sample.x);
-                yStats = yIngestor(sample.y);
-                radiusStats = radiusIngestor(sample.Mag());
-                angleStats = angleIngestor(sample.Argument());
+                cartesianStats = cartesianIngestor(sample.x, sample.y);
+                radialStats = radialIngestor(sample.Mag(), sample.Argument());
             }
 
-            // TODO: CHECK VARIANCES!
-            expect(Validate(xStats, { tolerance: 0.1, min: -R, max: +R, mean: 0 })).toBe(true);
-            expect(Validate(yStats, { tolerance: 0.1, min: -R, max: +R, mean: 0 })).toBe(true);
-            expect(Validate(radiusStats, { tolerance: 0.1, min: r, max: R })).toBe(true);
-            expect(Validate(angleStats, { tolerance: 0.1, min: -Math.PI, max: +Math.PI, mean: 0, variance: Math.PI * Math.PI / 3 })).toBe(true);
+            const cartesianExpected = {
+                tolerance: 0.1,
+                covariance: 0,
+                x: { min: -R, max: +R, mean: 0, },
+                y: { min: -R, max: +R, mean: 0, },
+            };
+
+            const [meanR, varR] = (() => {
+                const Rr2 = R * R - r * r;
+                const Rr3 = R * R * R - r * r * r;
+                const Rr4 = R * R * R * R - r * r * r * r;
+
+                const mean = (2 * Rr3) / (3 * Rr2);
+                const variance = Rr4 / (2 * Rr2) - mean * mean;
+
+                return [mean, variance];
+            })();
+            const radialExpected = {
+                tolerance: 0.1,
+                covariance: 0,
+                x: { min: r, max: R, mean: meanR, variance: varR, },
+                y: { min: -Math.PI, max: +Math.PI, mean: 0, variance: (Math.PI * Math.PI) / 3, },
+            };
+
+            expect(CovarianceValidate(cartesianStats, cartesianExpected)).toBe(true);
+            expect(CovarianceValidate(radialStats, radialExpected)).toBe(true);
         }
     }
+});
+
+test("Normal() returns two independent normal variables", () => {
+    const provider = new RngVec2Provider();
+
+    const stats = ObserveCovariance(() => provider.Normal(), SAMPLES);
+    const expected = {
+        tolerance: 0.1,
+        covariance: 0,
+        x: { mean: 0, variance: 1, },
+        y: { mean: 0, variance: 1, },
+    };
+
+    console.log(stats);
+
+    expect(CovarianceValidate(stats, expected)).toBe(true);
 });
