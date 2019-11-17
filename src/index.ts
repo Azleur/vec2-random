@@ -48,7 +48,7 @@ export class RngVec2Provider {
         return FromPolar(radius, angle);
     }
 
-    // TODO: TEST!
+    // TODO: TEST AND DOCUMENT.
     /** Returns a random Vec2 in the ring with given inner and outer radii, with a radial finite bell distribution. */
     RingBell(innerRadius: number, outerRadius: number): Vec2 {
         const r2 = innerRadius * innerRadius;

@@ -1,6 +1,6 @@
 {
     "name": "@azleur/vec2-random",
-    "version": "0.1.0",
+    "version": "0.0.0",
     "author": "azleur",
     "license": "ISC",
     "repository": {
@@ -10,6 +10,9 @@
     "homepage": "https://github.com/Azleur/vec2-random",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
+    "publishConfig": {
+        "access": "public"
+    },
     "scripts": {
         "test": "jest",
         "build": "rm -rf dist && tsc && uglifyjs dist/*.js --compress --output dist/*.js"
