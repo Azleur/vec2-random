@@ -13,6 +13,8 @@ const vector: Vec2 = provider.Uniform(); // 0 <= x,y <= 1.
 ...
 ```
 
+The provider wraps a random number generator. Any function `() => number` that returns uniform random values in the range `[0, 1)` will do. The module [random](https://github.com/Azleur/random) provides some defaults.
+
 ## Boxes and balls
 
 You can generate uniformly distributed samples in different shapes:
