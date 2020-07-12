@@ -15,18 +15,18 @@
     },
     "scripts": {
         "test": "jest",
-        "build": "rm -rf dist && tsc && uglifyjs dist/*.js --compress --output dist/*.js"
+        "build": "rm -rf dist && tsc"
     },
     "devDependencies": {
         "@azleur/stats": "^0.2.1",
-        "@types/jest": "^24.0.18",
-        "jest": "^24.9.0",
-        "ts-jest": "^24.1.0",
+        "@types/jest": "^26.0.4",
+        "jest": "^26.1.0",
+        "ts-jest": "^26.1.1",
         "typescript": "^3.6.3"
     },
     "dependencies": {
-        "@azleur/math-util": "^0.1.0",
-        "@azleur/random": "^0.1.0",
-        "@azleur/vec2": "^0.1.1"
+        "@azleur/math-util": "^0.1.1",
+        "@azleur/random": "^0.2.2",
+        "@azleur/vec2": "^0.2.2"
     }
 }
